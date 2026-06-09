@@ -9,6 +9,9 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  optimizeDeps: {
+    include: ['react-icons/gi', 'react-icons/tb'],
+  },
   resolve: {
     alias: {
       '@modules':    path.resolve(__dirname, './src/modules'),

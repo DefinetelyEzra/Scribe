@@ -1,0 +1,47 @@
+/* Spirit (default) — bioluminescent glow on dark */
+[data-theme="spirit"] {
+  --scribe-bg: #0d1117;
+  --scribe-fg-a: #7b9fe0;
+  --scribe-fg-b: #e07b9f;
+  --scribe-fg-neutral: #9fc8e8;
+  --scribe-glow-a: 0 0 6px #7b9fe088, 0 0 14px #7b9fe033;
+  --scribe-glow-b: 0 0 6px #e07b9f88, 0 0 14px #e07b9f33;
+  --scribe-label: #c9d1d9;
+  --scribe-grid: rgba(255, 255, 255, 0.04);
+}
+
+/* Tactical — military schematic on near-black */
+[data-theme="tactical"] {
+  --scribe-bg: #1a1f1a;
+  --scribe-fg-a: #6e9e6e;
+  --scribe-fg-b: #9e6e6e;
+  --scribe-fg-neutral: #8fb88f;
+  --scribe-glow-a: none;
+  --scribe-glow-b: none;
+  --scribe-label: #b0b8b0;
+  --scribe-grid: rgba(255, 255, 255, 0.05);
+}
+
+/* Sketch — pencil on paper */
+[data-theme="sketch"] {
+  --scribe-bg: #f5f0e8;
+  --scribe-fg-a: #4a3c2c;
+  --scribe-fg-b: #2c3c4a;
+  --scribe-fg-neutral: #6a5848;
+  --scribe-glow-a: none;
+  --scribe-glow-b: none;
+  --scribe-label: #3a3228;
+  --scribe-grid: rgba(0, 0, 0, 0.06);
+}
+
+/* Ink — high contrast on white */
+[data-theme="ink"] {
+  --scribe-bg: #ffffff;
+  --scribe-fg-a: #1a1a2e;
+  --scribe-fg-b: #2e1a1a;
+  --scribe-fg-neutral: #2a2a3a;
+  --scribe-glow-a: none;
+  --scribe-glow-b: none;
+  --scribe-label: #444444;
+  --scribe-grid: rgba(0, 0, 0, 0.08);
+}
