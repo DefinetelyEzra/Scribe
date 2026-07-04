@@ -11,13 +11,8 @@ import { CanvasRenderer } from '@renderer/CanvasRenderer';
 import { THEME_COLORS } from '@renderer/glyphs';
 import type { FigurePosition } from '@types/modules';
 
-/** Figures below this threshold use the SVG renderer; above it use Canvas. */
 const SVG_THRESHOLD = 2000;
 
-/**
- * Computes the figure list for the current armies params.
- * Combines both factions if factionB is enabled, then applies casualties.
- */
 function buildFigures(
   armies: ReturnType<typeof useAppStore.getState>['armies'],
 ): FigurePosition[] {
@@ -38,28 +33,39 @@ function buildFigures(
 
 export const ArmiesRenderer: FC = () => {
   const armies = useAppStore((s) => s.armies);
-  const { style, colorA, colorB, count, factionB, factionBCount, showLabels } = armies;
+  const {
+    style, colorA, colorB,
+    count, factionB, factionBCount,
+    factionAName, factionBName,
+    showLabels,
+  } = armies;
 
-  const themeColors = THEME_COLORS[style];
-  const totalCount = factionB ? count + factionBCount : count;
-  const useCanvas = totalCount > SVG_THRESHOLD;
+  const themeColors  = THEME_COLORS[style];
+  const totalCount   = factionB ? count + factionBCount : count;
+  const useCanvas    = totalCount > SVG_THRESHOLD;
+  const figures      = buildFigures(armies);
 
-  const figures = buildFigures(armies);
-
-  // Track container dimensions for responsive sizing
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 720, height: 500 });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
+    // Read initial size immediately so we don't start with wrong dims
+    const { width, height } = el.getBoundingClientRect();
+    if (width > 0) setDims({ width: Math.floor(width), height: Math.floor(height) });
+
     const ro = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setDims({ width: Math.floor(width), height: Math.floor(height) });
+      const { width: w, height: h } = entries[0].contentRect;
+      setDims({ width: Math.floor(w), height: Math.floor(h) });
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  const nameA = factionAName || 'A';
+  const nameB = factionBName || 'B';
 
   return (
     <div
@@ -89,18 +95,29 @@ export const ArmiesRenderer: FC = () => {
         />
       )}
 
+      {/* Always-visible count badge in top-right corner */}
+      <div
+        className="absolute top-3 right-3 text-xs font-mono tabular-nums pointer-events-none px-2 py-0.5 rounded"
+        style={{ color: themeColors.label, backgroundColor: `${themeColors.bg}cc` }}
+      >
+        {totalCount.toLocaleString()}
+      </div>
+
+      {/* Detailed labels overlay — shown only when explicitly enabled */}
       {showLabels && (
         <div
           className="absolute bottom-4 left-4 text-xs font-mono leading-relaxed pointer-events-none"
           style={{ color: themeColors.label }}
         >
-          <div>{totalCount.toLocaleString()} figures</div>
-          {factionB && (
-            <div>
-              A: {count.toLocaleString()} · B: {factionBCount.toLocaleString()}
-            </div>
+          {factionB ? (
+            <>
+              <div style={{ color: colorA }}>{nameA}: {count.toLocaleString()}</div>
+              <div style={{ color: colorB }}>{nameB}: {factionBCount.toLocaleString()}</div>
+            </>
+          ) : (
+            <div>{nameA}: {count.toLocaleString()}</div>
           )}
-          <div>
+          <div className="opacity-60">
             Frontage ≈ {Math.ceil(Math.sqrt(count * 1.5))} m
           </div>
         </div>

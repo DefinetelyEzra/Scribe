@@ -11,14 +11,22 @@ interface SvgRendererProps {
   height: number;
 }
 
-const FONT_SIZE = 9;
+const MAX_FONT = 9;
+const MIN_FONT = 2;
 const PADDING = 28;
-const CASUALTY_COLOR = '#666666';
-const CASUALTY_OPACITY = 0.3;
+// Cap grid spacing so figures form a tight visual cluster rather than scattered dots
+const MAX_CELL_SIZE = 16;
+const CASUALTY_COLOR = '#888888';
+const CASUALTY_OPACITY = 0.5;
 
 interface Scaled extends FigurePosition {
   px: number;
   py: number;
+}
+
+interface ScaleResult {
+  scaled: Scaled[];
+  cellSize: number;
 }
 
 /** Translates grid-unit positions into pixel positions that fit within the given viewport. */
@@ -26,8 +34,8 @@ function scaleToView(
   figures: FigurePosition[],
   width: number,
   height: number,
-): Scaled[] {
-  if (figures.length === 0) return [];
+): ScaleResult {
+  if (figures.length === 0) return { scaled: [], cellSize: MAX_CELL_SIZE };
 
   // Manually compute bbox to avoid spread-operator stack overflow at high counts
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -42,16 +50,21 @@ function scaleToView(
   const rangeY = Math.max(maxY - minY, 1);
   const availW = width - PADDING * 2;
   const availH = height - PADDING * 2;
-  const scale = Math.min(availW / rangeX, availH / rangeY);
+  // Cap cell size so formations look dense rather than spread across the whole canvas
+  const cellSize = Math.min(MAX_CELL_SIZE, Math.min(availW / rangeX, availH / rangeY));
 
-  const offsetX = (width - rangeX * scale) / 2;
-  const offsetY = (height - rangeY * scale) / 2;
+  const usedW = rangeX * cellSize;
+  const usedH = rangeY * cellSize;
+  const offsetX = (width - usedW) / 2;
+  const offsetY = (height - usedH) / 2;
 
-  return figures.map((f) => ({
+  const scaled = figures.map((f) => ({
     ...f,
-    px: (f.x - minX) * scale + offsetX,
-    py: (f.y - minY) * scale + offsetY,
+    px: (f.x - minX) * cellSize + offsetX,
+    py: (f.y - minY) * cellSize + offsetY,
   }));
+
+  return { scaled, cellSize };
 }
 
 /** SVG filter definition for a colored glow effect applied to a figure group. */
@@ -83,15 +96,15 @@ export const SvgRenderer: FC<SvgRendererProps> = ({
   height,
 }) => {
   const { hasGlow } = THEME_COLORS[theme];
-  const scaled = scaleToView(figures, width, height);
-  const glyph = GLYPHS.person;
+  const { scaled, cellSize } = scaleToView(figures, width, height);
+  const fontSize = Math.min(MAX_FONT, Math.max(MIN_FONT, cellSize * 0.75));
 
   const casualties = scaled.filter((f) => f.casualty);
-  const factionA = scaled.filter((f) => !f.casualty && f.faction === 'a');
-  const factionB = scaled.filter((f) => !f.casualty && f.faction === 'b');
+  const factionA   = scaled.filter((f) => !f.casualty && f.faction === 'a');
+  const factionB   = scaled.filter((f) => !f.casualty && f.faction === 'b');
 
   const textProps = {
-    fontSize: FONT_SIZE,
+    fontSize,
     textAnchor: 'middle' as const,
     dominantBaseline: 'middle' as const,
     style: { userSelect: 'none' as const },
@@ -113,12 +126,12 @@ export const SvgRenderer: FC<SvgRendererProps> = ({
         </defs>
       )}
 
-      {/* Casualties — flat grey, dimmed */}
+      {/* Casualties — distinct × glyph, dimmed */}
       {casualties.length > 0 && (
         <g fill={CASUALTY_COLOR} opacity={CASUALTY_OPACITY}>
           {casualties.map((f, i) => (
             <text key={i} x={f.px} y={f.py} {...textProps}>
-              {glyph}
+              {GLYPHS.fallen}
             </text>
           ))}
         </g>
@@ -128,7 +141,7 @@ export const SvgRenderer: FC<SvgRendererProps> = ({
       <g fill={colorA} filter={hasGlow ? 'url(#glow-a)' : undefined}>
         {factionA.map((f, i) => (
           <text key={i} x={f.px} y={f.py} {...textProps}>
-            {glyph}
+            {GLYPHS.person}
           </text>
         ))}
       </g>
@@ -138,7 +151,7 @@ export const SvgRenderer: FC<SvgRendererProps> = ({
         <g fill={colorB} filter={hasGlow ? 'url(#glow-b)' : undefined}>
           {factionB.map((f, i) => (
             <text key={i} x={f.px} y={f.py} {...textProps}>
-              {glyph}
+              {GLYPHS.person}
             </text>
           ))}
         </g>

@@ -11,8 +11,10 @@ import { Layout } from '@components/Layout';
 import { ControlPanel } from '@components/ControlPanel';
 import { PreviewCanvas } from '@components/PreviewCanvas';
 import { ExportBar } from '@components/ExportBar';
+import { ErrorBoundary } from '@components/ErrorBoundary';
 import { ArmiesControls, ArmiesRenderer } from '@modules/armies';
 import { ScaleControls, ScaleRenderer } from '@modules/scale';
+import { TimelineControls, TimelineRenderer } from '@modules/timeline';
 import './App.css';
 import '@styles/themes.css';
 
@@ -31,7 +33,9 @@ function ModulePage({
       </ControlPanel>
       <div className="flex flex-col flex-1 min-w-0 h-full">
         <PreviewCanvas>
-          <Renderer />
+          <ErrorBoundary>
+            <Renderer />
+          </ErrorBoundary>
         </PreviewCanvas>
         <ExportBar />
       </div>
@@ -71,11 +75,23 @@ const scaleRoute = createRoute({
   ),
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, armiesRoute, scaleRoute]);
+const timelineRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/timeline',
+  component: () => (
+    <ModulePage Controls={TimelineControls} Renderer={TimelineRenderer} />
+  ),
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  armiesRoute,
+  scaleRoute,
+  timelineRoute,
+]);
 
 const router = createRouter({ routeTree });
 
-// Register the router for full type-safety
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;

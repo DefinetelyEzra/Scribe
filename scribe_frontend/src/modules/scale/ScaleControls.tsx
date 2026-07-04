@@ -1,33 +1,39 @@
 import type { FC } from 'react';
 import { useAppStore } from '@store/appStore';
-import type { ScaleParams } from '@types/modules';
+import type { ScaleParams, TerrainModifier } from '@types/modules';
 import { Slider } from '@components/ui/Slider';
 import { Select } from '@components/ui/Select';
 import { Toggle } from '@components/ui/Toggle';
 import { HEIGHT_REFS } from './scale.utils';
 
 const UNIT_OPTIONS = [
-  { value: 'meters',          label: 'Meters' },
-  { value: 'feet',            label: 'Feet' },
-  { value: 'miles',           label: 'Miles' },
-  { value: 'km',              label: 'Kilometers' },
-  { value: 'leagues',         label: 'Leagues' },
-  { value: 'days-walking',    label: 'Days (walking)' },
-  { value: 'days-horseback',  label: 'Days (horseback)' },
-  { value: 'days-ship',       label: 'Days (by ship)' },
+  { value: 'meters',          label: 'Meters'          },
+  { value: 'feet',            label: 'Feet'            },
+  { value: 'miles',           label: 'Miles'           },
+  { value: 'km',              label: 'Kilometers'      },
+  { value: 'leagues',         label: 'Leagues'         },
+  { value: 'days-walking',    label: 'Days (walking)'  },
+  { value: 'days-horseback',  label: 'Days (horseback)'},
+  { value: 'days-ship',       label: 'Days (by ship)'  },
 ];
 
 const MODE_OPTIONS = [
-  { value: 'height',     label: 'Height comparison' },
+  { value: 'height',     label: 'Height comparison'  },
   { value: 'horizontal', label: 'Horizontal distance' },
-  { value: 'travel',     label: 'Travel time' },
+  { value: 'travel',     label: 'Travel time'         },
 ];
 
 const STYLE_OPTIONS = [
-  { value: 'spirit',   label: 'Spirit' },
+  { value: 'spirit',   label: 'Spirit'   },
   { value: 'tactical', label: 'Tactical' },
-  { value: 'sketch',   label: 'Sketch' },
-  { value: 'ink',      label: 'Ink' },
+  { value: 'sketch',   label: 'Sketch'   },
+  { value: 'ink',      label: 'Ink'      },
+];
+
+const TERRAIN_OPTIONS = [
+  { value: '0.5', label: 'Road / path (faster)'    },
+  { value: '1',   label: 'Normal terrain'           },
+  { value: '2',   label: 'Rough / mountain (slower)'},
 ];
 
 const HEIGHT_REF_OPTIONS = Object.entries(HEIGHT_REFS).map(([id, ref]) => ({
@@ -35,21 +41,25 @@ const HEIGHT_REF_OPTIONS = Object.entries(HEIGHT_REFS).map(([id, ref]) => ({
   label: `${ref.label} (${ref.value} m)`,
 }));
 
+const TRAVEL_UNITS = new Set(['days-walking', 'days-horseback', 'days-ship']);
+
 export const ScaleControls: FC = () => {
   const scale = useAppStore((s) => s.scale);
-  const set = useAppStore((s) => s.setScaleParam);
+  const set   = useAppStore((s) => s.setScaleParam);
 
   function update<K extends keyof ScaleParams>(key: K, value: ScaleParams[K]): void {
     set(key, value);
   }
 
   function toggleRef(id: string): void {
-    const current = scale.referenceIds;
-    const next = current.includes(id)
-      ? current.filter((r) => r !== id)
-      : [...current, id];
+    const next = scale.referenceIds.includes(id)
+      ? scale.referenceIds.filter((r) => r !== id)
+      : [...scale.referenceIds, id];
     update('referenceIds', next);
   }
+
+  const isTravelMode = scale.displayMode === 'travel';
+  const isTravelUnit = TRAVEL_UNITS.has(scale.unit);
 
   return (
     <div className="flex flex-col gap-6 p-5">
@@ -104,6 +114,24 @@ export const ScaleControls: FC = () => {
                 </label>
               ))}
             </div>
+          </section>
+        </>
+      )}
+
+      {/* Terrain modifier — only relevant when both display=travel and a travel unit */}
+      {isTravelMode && isTravelUnit && (
+        <>
+          <div className="border-t border-zinc-800" />
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">
+              Terrain
+            </h3>
+            <Select
+              label="Modifier"
+              value={String(scale.terrainModifier)}
+              options={TERRAIN_OPTIONS}
+              onChange={(v) => update('terrainModifier', Number(v) as TerrainModifier)}
+            />
           </section>
         </>
       )}

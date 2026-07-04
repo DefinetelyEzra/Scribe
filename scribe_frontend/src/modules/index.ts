@@ -17,4 +17,9 @@ export const MODULE_LIST: ModuleMeta[] = [
     name: 'Scale & Distance',
     description: 'See measurements in immediate human context',
   },
+  {
+    id: 'timeline',
+    name: 'Timeline',
+    description: 'Map events along a narrative time axis',
+  },
 ];

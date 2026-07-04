@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export type ThemeName = 'spirit' | 'tactical' | 'sketch' | 'ink';
-export type ModuleId = 'armies' | 'scale';
+export type ModuleId = 'armies' | 'scale' | 'timeline';
 export type FormationType =
   | 'infantry-block'
   | 'cavalry-wedge'
@@ -20,12 +20,16 @@ export type UnitType =
   | 'days-ship';
 export type ScaleDisplayMode = 'height' | 'horizontal' | 'travel';
 export type GapSize = 'narrow' | 'medium' | 'wide';
+export type TimelineEventType = 'era' | 'battle' | 'event' | 'birth' | 'death';
+export type TerrainModifier = 0.5 | 1 | 2;
 
 export interface ArmiesParams {
   count: number;
   formation: FormationType;
   factionB: boolean;
   factionBCount: number;
+  factionAName: string;
+  factionBName: string;
   gap: GapSize;
   style: ThemeName;
   casualties: number;
@@ -41,6 +45,20 @@ export interface ScaleParams {
   referenceIds: string[];
   style: ThemeName;
   showScaleBar: boolean;
+  showLabels: boolean;
+  terrainModifier: TerrainModifier;
+}
+
+export interface TimelineEvent {
+  id: string;
+  label: string;
+  year: number;
+  type: TimelineEventType;
+}
+
+export interface TimelineParams {
+  events: TimelineEvent[];
+  style: ThemeName;
   showLabels: boolean;
 }
 

@@ -11,6 +11,9 @@ export const ColorPicker: FC<ColorPickerProps> = ({ label, value, onChange }) =>
     onChange(e.target.value);
   }
 
+  // Normalise to always include the # prefix for display
+  const display = value.startsWith('#') ? value.toUpperCase() : `#${value.toUpperCase()}`;
+
   return (
     <div className="flex items-center justify-between gap-3">
       <label className="text-sm text-zinc-300">{label}</label>
@@ -27,7 +30,7 @@ export const ColorPicker: FC<ColorPickerProps> = ({ label, value, onChange }) =>
           aria-label={`${label} color`}
           className="w-8 h-8 bg-transparent border-0 cursor-pointer p-0 rounded"
         />
-        <span className="text-xs font-mono text-zinc-400">{value.toUpperCase()}</span>
+        <span className="text-xs font-mono text-zinc-400">{display}</span>
       </div>
     </div>
   );

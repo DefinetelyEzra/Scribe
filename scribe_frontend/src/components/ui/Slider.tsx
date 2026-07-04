@@ -5,20 +5,52 @@ interface SliderProps {
   value: number;
   min: number;
   max: number;
-  step: number;
+  step?: number;
   unit?: string;
+  /** When true, maps slider position logarithmically so small values have finer control. */
+  logarithmic?: boolean;
   onChange: (value: number) => void;
 }
 
-export const Slider: FC<SliderProps> = ({ label, value, min, max, step, unit, onChange }) => {
+const LOG_STEPS = 1000;
+
+function valueToLog(value: number, min: number, max: number): number {
+  if (min <= 0) return value;
+  return Math.round(
+    ((Math.log(value) - Math.log(min)) / (Math.log(max) - Math.log(min))) * LOG_STEPS,
+  );
+}
+
+function logToValue(logVal: number, min: number, max: number): number {
+  return Math.round(
+    Math.exp(Math.log(min) + (logVal / LOG_STEPS) * (Math.log(max) - Math.log(min))),
+  );
+}
+
+export const Slider: FC<SliderProps> = ({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  unit,
+  logarithmic = false,
+  onChange,
+}) => {
   function handleRange(e: ChangeEvent<HTMLInputElement>): void {
-    onChange(Number(e.target.value));
+    const raw = Number(e.target.value);
+    onChange(logarithmic ? logToValue(raw, min, max) : raw);
   }
 
   function handleInput(e: ChangeEvent<HTMLInputElement>): void {
     const n = Number(e.target.value);
     if (!Number.isNaN(n)) onChange(Math.min(max, Math.max(min, n)));
   }
+
+  const sliderValue = logarithmic ? valueToLog(value, min, max) : value;
+  const sliderMin   = logarithmic ? 0 : min;
+  const sliderMax   = logarithmic ? LOG_STEPS : max;
+  const sliderStep  = logarithmic ? 1 : step;
 
   const display = unit ? `${value}${unit}` : String(value);
 
@@ -39,10 +71,10 @@ export const Slider: FC<SliderProps> = ({ label, value, min, max, step, unit, on
       </div>
       <input
         type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
+        min={sliderMin}
+        max={sliderMax}
+        step={sliderStep}
+        value={sliderValue}
         onChange={handleRange}
         aria-label={label}
         aria-valuetext={display}

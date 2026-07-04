@@ -12,10 +12,12 @@ interface CanvasRendererProps {
   height: number;
 }
 
-const FONT_SIZE = 7;
+const MAX_FONT = 9;
+const MIN_FONT = 2;
 const PADDING = 24;
-const CASUALTY_COLOR = '#666666';
-const CASUALTY_ALPHA = 0.25;
+const MAX_CELL_SIZE = 16;
+const CASUALTY_COLOR = '#888888';
+const CASUALTY_ALPHA = 0.5;
 const GLOW_BLUR = 8;
 
 /**
@@ -33,7 +35,6 @@ export const CanvasRenderer: FC<CanvasRendererProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { hasGlow } = THEME_COLORS[theme];
-  const glyph = GLYPHS.person;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,24 +58,27 @@ export const CanvasRenderer: FC<CanvasRendererProps> = ({
     const rangeY = Math.max(maxY - minY, 1);
     const availW = width - PADDING * 2;
     const availH = height - PADDING * 2;
-    const scale = Math.min(availW / rangeX, availH / rangeY);
+    const cellSize = Math.min(MAX_CELL_SIZE, Math.min(availW / rangeX, availH / rangeY));
+    const fontSize = Math.min(MAX_FONT, Math.max(MIN_FONT, cellSize * 0.75));
 
-    const offsetX = (width - rangeX * scale) / 2;
-    const offsetY = (height - rangeY * scale) / 2;
+    const usedW  = rangeX * cellSize;
+    const usedH  = rangeY * cellSize;
+    const offsetX = (width  - usedW) / 2;
+    const offsetY = (height - usedH) / 2;
 
-    const px = (x: number) => (x - minX) * scale + offsetX;
-    const py = (y: number) => (y - minY) * scale + offsetY;
+    const px = (x: number) => (x - minX) * cellSize + offsetX;
+    const py = (y: number) => (y - minY) * cellSize + offsetY;
 
-    ctx.font = `${FONT_SIZE}px monospace`;
+    ctx.font = `${fontSize}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Layer 1: casualties
+    // Layer 1: casualties — × glyph, dimmed
     ctx.shadowBlur = 0;
     ctx.globalAlpha = CASUALTY_ALPHA;
     ctx.fillStyle = CASUALTY_COLOR;
     for (const f of figures) {
-      if (f.casualty) ctx.fillText(glyph, px(f.x), py(f.y));
+      if (f.casualty) ctx.fillText(GLYPHS.fallen, px(f.x), py(f.y));
     }
 
     ctx.globalAlpha = 1;
@@ -84,20 +88,20 @@ export const CanvasRenderer: FC<CanvasRendererProps> = ({
     ctx.shadowBlur = hasGlow ? GLOW_BLUR : 0;
     ctx.shadowColor = colorA;
     for (const f of figures) {
-      if (!f.casualty && f.faction === 'a') ctx.fillText(glyph, px(f.x), py(f.y));
+      if (!f.casualty && f.faction === 'a') ctx.fillText(GLYPHS.person, px(f.x), py(f.y));
     }
 
     // Layer 3: faction B
     ctx.fillStyle = colorB;
     ctx.shadowColor = colorB;
     for (const f of figures) {
-      if (!f.casualty && f.faction === 'b') ctx.fillText(glyph, px(f.x), py(f.y));
+      if (!f.casualty && f.faction === 'b') ctx.fillText(GLYPHS.person, px(f.x), py(f.y));
     }
 
     // Reset shadow so it doesn't bleed into other draws
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
-  }, [figures, theme, colorA, colorB, width, height, hasGlow, glyph]);
+  }, [figures, theme, colorA, colorB, width, height, hasGlow]);
 
   return (
     <canvas

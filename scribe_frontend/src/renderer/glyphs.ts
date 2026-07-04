@@ -2,14 +2,15 @@ import type { ThemeName } from '@types/modules';
 
 /** Unicode glyphs used as figure silhouettes in SVG and Canvas rendering. */
 export const GLYPHS = {
-  person: '⬦',    // ⬦ — default figure
-  cavalry: '▲',   // ▲ — cavalry / special unit
-  dot: '•',       // • — compact figure for high-density rendering
-  cottage: '⌂',   // ⌂ — cottage height reference
-  tree: '✶',      // ✦ — tree height reference
-  tower: '⬡',     // ⬡ — castle tower reference
-  cathedral: '✚', // ✚ — cathedral reference
-  wall: '■',      // ■ — city wall reference
+  person: '⬦',    // default figure
+  cavalry: '▲',   // cavalry / special unit
+  dot: '•',       // compact figure for high-density rendering
+  fallen: '×',    // casualty / fallen figure
+  cottage: '⌂',   // cottage height reference
+  tree: '✶',      // tree height reference
+  tower: '⬡',     // castle tower reference
+  cathedral: '✚', // cathedral reference
+  wall: '■',      // city wall reference
 } as const;
 
 /** Maps a scale reference ID to the appropriate glyph character. */
